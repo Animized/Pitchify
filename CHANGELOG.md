@@ -2,6 +2,13 @@
 
 All notable user-facing changes are documented here.
 
+## 1.2.2 - 2026-07-19
+
+### Fixed
+
+- Use an explicit extension test path so Windows GitHub Actions on Node 20 can
+  run the test suite without shell wildcard expansion.
+
 ## 1.2.1 - 2026-07-19
 
 ### Fixed
