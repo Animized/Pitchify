@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $productName = "Pitchify"
-$productVersion = "1.2.0"
+$productVersion = "1.2.1"
 $helperProcessName = "Pitchify.Helper"
 $sourceHelper = Join-Path $PSScriptRoot "helper"
 $extensionTemplate = Join-Path $PSScriptRoot "pitchify.template.js"
@@ -99,6 +99,55 @@ function Stop-PitchifyHelper {
     if ($remainingHelpers.Count -gt 0) {
         throw "Pitchify Helper is still running. End it in Task Manager, then run the installer again."
     }
+}
+
+function Stop-SpotifyClient {
+    $runningSpotify = @(Get-Process -Name "spotify" -ErrorAction SilentlyContinue)
+    foreach ($spotify in $runningSpotify) {
+        try {
+            $spotify.Kill()
+            if (-not $spotify.WaitForExit(10000)) {
+                throw "Spotify process $($spotify.Id) did not stop within 10 seconds."
+            }
+        }
+        catch [System.InvalidOperationException] {
+            # The process exited between discovery and shutdown.
+        }
+    }
+
+    if (Get-Process -Name "spotify" -ErrorAction SilentlyContinue) {
+        throw "Spotify is still running. Close it and run the Pitchify installer again."
+    }
+}
+
+function Apply-Spicetify {
+    Stop-SpotifyClient
+
+    & spicetify -n apply
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host (
+            "Spotify changed since the last Spicetify backup; rebuilding the backup."
+        ) -ForegroundColor Yellow
+        & spicetify -n backup apply
+        if ($LASTEXITCODE -ne 0) {
+            throw "Spicetify could not patch the installed Spotify version."
+        }
+    }
+
+    $spotifyPath = (& spicetify config spotify_path).Trim()
+    $spotifyExecutable = Join-Path $spotifyPath "Spotify.exe"
+    $patchedWrapper = Join-Path $spotifyPath "Apps\xpui\helper\spicetifyWrapper.js"
+    $staleArchive = Join-Path $spotifyPath "Apps\xpui.spa"
+    if (-not (Test-Path -LiteralPath $patchedWrapper) -or
+        (Test-Path -LiteralPath $staleArchive)) {
+        throw @"
+Spicetify did not finish patching Spotify.
+
+Close Spotify, run 'spicetify backup apply', then run the Pitchify installer again.
+"@
+    }
+
+    Start-Process -FilePath $spotifyExecutable
 }
 
 function Copy-HelperWithRetry {
@@ -195,7 +244,7 @@ $runCommand = '"' + $helperExecutable + '"'
 New-ItemProperty -Path $runKey -Name $productName -Value $runCommand -PropertyType String -Force | Out-Null
 
 & spicetify config extensions "pitchify.js"
-& spicetify apply
+Apply-Spicetify
 
 Start-Process -FilePath $helperExecutable -WorkingDirectory $helperDirectory -WindowStyle Hidden
 

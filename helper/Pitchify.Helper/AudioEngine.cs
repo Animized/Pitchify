@@ -58,7 +58,7 @@ public sealed class AudioEngine : IDisposable
         {
             var config = _configStore.Snapshot();
             return new StatusDto(
-                Version: "1.2.0",
+                Version: BuildInfo.Version,
                 Semitones: config.Semitones,
                 State: _state,
                 InputDevice: ToDeviceDto(_inputDevice, isDefault: false),

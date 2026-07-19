@@ -44,7 +44,7 @@ using var updateService = new UpdateService(
     configStore,
     logger,
     dataDirectory,
-    currentVersion: "1.2.0");
+    currentVersion: BuildInfo.Version);
 
 var builder = WebApplication.CreateSlimBuilder(args);
 builder.WebHost.UseUrls("http://127.0.0.1:38123");
@@ -154,7 +154,8 @@ app.MapPost("/v1/update", async (CancellationToken cancellationToken) =>
 
 app.Lifetime.ApplicationStarted.Register(() =>
 {
-    logger.Info("Pitchify Helper 1.2.0 started on http://127.0.0.1:38123.");
+    logger.Info(
+        $"Pitchify Helper {BuildInfo.Version} started on http://127.0.0.1:38123.");
     audioEngine.Start();
     updateService.Start();
 });

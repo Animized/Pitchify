@@ -2,6 +2,19 @@
 
 All notable user-facing changes are documented here.
 
+## 1.2.1 - 2026-07-19
+
+### Fixed
+
+- Detect Spotify updates during installation and automatically rebuild the
+  Spicetify backup before applying Marketplace and Pitchify.
+- Prevent Spotify from reopening early and loading an unpatched `xpui.spa`
+  archive instead of Spicetify's generated interface.
+
+### Changed
+
+- Centralized helper runtime version reporting for safer update releases.
+
 ## 1.2.0 - 2026-07-19
 
 ### Added
