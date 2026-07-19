@@ -1,0 +1,11 @@
+node_modules/
+dist/
+release/
+.tools/
+helper/**/bin/
+helper/**/obj/
+TestResults/
+*.user
+*.log
+handoff/
+Pitchify-v*-GitHub-Ready.zip

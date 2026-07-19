@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a reproducible Pitchify problem
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include what you expected and what occurred instead.
+    validations:
+      required: true
+  - type: input
+    id: spotify
+    attributes:
+      label: Spotify version
+    validations:
+      required: true
+  - type: input
+    id: spicetify
+    attributes:
+      label: Spicetify version
+    validations:
+      required: true
+  - type: input
+    id: devices
+    attributes:
+      label: Input and output devices
+      placeholder: CABLE Output -> Headphones
+    validations:
+      required: true
+  - type: input
+    id: pitch
+    attributes:
+      label: Pitch value
+      placeholder: +3 st
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Say whether the issue also occurs at 0 st.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log excerpt
+      description: Remove private information and API tokens first.
