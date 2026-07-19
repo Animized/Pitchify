@@ -49,8 +49,6 @@ and https://aka.ms/dotnet/8.0/aspnetcore-runtime-win-x64.exe
 
 The Pitchify slider appears beside the now-playing information on the left side of the player bar. Double-click the slider to reset it to `0`. Click the **Pitch** label to open output-device and diagnostic settings.
 
-When a newer GitHub Release is available, an **Update to vX.Y.Z** link appears beside the semitone value. Clicking it downloads the official release asset, verifies GitHub's SHA-256 digest, installs it, and reconnects the helper automatically.
-
 ## Audio routing
 
 When Spotify is routed to CABLE Input, the Pitchify helper is responsible for forwarding its audio. Spotify will be silent if the helper is stopped.
