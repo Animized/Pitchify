@@ -31,20 +31,24 @@ VB-CABLE is a separate donationware audio driver. It is not bundled with Pitchif
 
 ## Install
 
-1. Install Spicetify.
-2. Install VB-CABLE from its official website and restart Windows.
-3. Extract `Pitchify-win-x64.zip`.
-4. Open PowerShell in the extracted folder. (open the folder and type "powershell" in the top search / file path)
-5. Run:
+1. Install: https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe
+and https://aka.ms/dotnet/8.0/aspnetcore-runtime-win-x64.exe
+2. Install Spicetify.
+3. Install VB-CABLE from its official website and restart Windows.
+4. Extract `Pitchify-win-x64.zip`.
+5. Open PowerShell in the extracted folder.
+<img width="1064" height="248" alt="image" src="https://github.com/user-attachments/assets/fd3f1f1d-4435-4a00-8697-62f90a509702" />
+
+6. Run:
 
    ```powershell
    powershell -ExecutionPolicy Bypass -File .\install.ps1
    ```
 
-6. Start Spotify and play a song.
-7. Open **Settings > System > Sound > Volume mixer**.
-8. Find Spotify and set its output to **CABLE Input (VB-Audio Virtual Cable)**.
-9. Restart Spotify.
+7. Start Spotify and play a song.
+8. Open **Settings > System > Sound > Volume mixer**.
+9. Find Spotify and set its output to **CABLE Input (VB-Audio Virtual Cable)**.
+10. Restart Spotify.
 
 The Pitchify slider appears beside the now-playing information on the left side of the player bar. Double-click the slider to reset it to `0`. Click the **Pitch** label to open output-device and diagnostic settings.
 
