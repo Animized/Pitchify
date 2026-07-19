@@ -1,6 +1,6 @@
 # Pitchify
 
-Pitchify adds an integer semitone slider to Spotify Desktop through Spicetify. It shifts local Spotify audio from **-12 to +12 semitones** while preserving the song's tempo.
+Pitchify adds a semitone slider to Spotify Desktop through Spicetify. It shifts local Spotify audio from **-12 to +12 semitones** while preserving the song's tempo.
 
 Spotify does not expose decoded song audio or pitch control to Spicetify. Pitchify therefore has two cooperating parts:
 
@@ -15,10 +15,7 @@ Pitchify is Windows-only and affects playback on **This computer**. Spotify Conn
 - Tempo-preserving stereo pitch shifting.
 - Persistent pitch and output-device selection.
 - One-click, SHA-256-verified updates from GitHub Releases.
-- High-quality anti-alias filtering for music.
-- Bounded live-audio buffering with device-clock drift correction.
 - Automatic recovery when Windows audio devices change.
-- Loopback-only authenticated helper API.
 
 ## Requirements
 
