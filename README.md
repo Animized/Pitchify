@@ -29,11 +29,11 @@ Pitchify is Windows-only and affects playback on **This computer**. Spotify Conn
 
 VB-CABLE is a separate donationware audio driver. It is not bundled with Pitchify.
 
-## Install a release
+## Install
 
 1. Install VB-CABLE from its official website and restart Windows.
 2. Extract `Pitchify-win-x64.zip`.
-3. Open PowerShell in the extracted folder.
+3. Open PowerShell in the extracted folder. (open the folder and type "powershell" in the top search / file path)
 4. Run:
 
    ```powershell
