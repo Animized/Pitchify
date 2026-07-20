@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $productName = "Pitchify"
-$productVersion = "1.2.4"
+$productVersion = "1.2.5"
 $helperProcessName = "Pitchify.Helper"
 $sourceHelper = Join-Path $PSScriptRoot "helper"
 $extensionTemplate = Join-Path $PSScriptRoot "pitchify.template.js"

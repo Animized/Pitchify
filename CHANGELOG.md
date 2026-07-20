@@ -2,6 +2,13 @@
 
 All notable user-facing changes are documented here.
 
+## 1.2.5 - 2026-07-19
+
+### Fixed
+
+- Retry release creation, asset upload, and publication when GitHub's release
+  service is temporarily unavailable.
+
 ## 1.2.4 - 2026-07-19
 
 ### Fixed

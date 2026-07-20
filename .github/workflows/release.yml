@@ -37,9 +37,53 @@ jobs:
         shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >
-          gh release create $env:GITHUB_REF_NAME
-          .\release\Pitchify-win-x64.zip
-          --verify-tag
-          --generate-notes
-          --title "Pitchify $env:GITHUB_REF_NAME"
+        run: |
+          $ErrorActionPreference = "Stop"
+          $tag = $env:GITHUB_REF_NAME
+          $asset = ".\release\Pitchify-win-x64.zip"
+          $maximumAttempts = 5
+
+          for ($attempt = 1; $attempt -le $maximumAttempts; $attempt++) {
+            gh release view $tag *> $null
+            if ($LASTEXITCODE -eq 0) {
+              break
+            }
+
+            gh release create $tag `
+              --verify-tag `
+              --generate-notes `
+              --title "Pitchify $tag" `
+              --draft
+            if ($LASTEXITCODE -eq 0) {
+              break
+            }
+
+            if ($attempt -eq $maximumAttempts) {
+              throw "GitHub could not create the release after $maximumAttempts attempts."
+            }
+            Start-Sleep -Seconds 10
+          }
+
+          for ($attempt = 1; $attempt -le $maximumAttempts; $attempt++) {
+            gh release upload $tag $asset --clobber
+            if ($LASTEXITCODE -eq 0) {
+              break
+            }
+
+            if ($attempt -eq $maximumAttempts) {
+              throw "GitHub could not upload the release asset after $maximumAttempts attempts."
+            }
+            Start-Sleep -Seconds 10
+          }
+
+          for ($attempt = 1; $attempt -le $maximumAttempts; $attempt++) {
+            gh release edit $tag --draft=false --latest
+            if ($LASTEXITCODE -eq 0) {
+              break
+            }
+
+            if ($attempt -eq $maximumAttempts) {
+              throw "GitHub could not publish the release after $maximumAttempts attempts."
+            }
+            Start-Sleep -Seconds 10
+          }
