@@ -2,6 +2,17 @@
 
 All notable user-facing changes are documented here.
 
+## 1.2.4 - 2026-07-19
+
+### Fixed
+
+- Keep automatic updates from closing or relaunching Spotify when the existing
+  extension is already installed.
+- Always attempt to restart Pitchify Helper if an installer step fails after
+  the running helper has been stopped.
+- Fall back to the previously installed helper if a new helper executable is
+  unavailable after a failed update.
+
 ## 1.2.3 - 2026-07-19
 
 ### Fixed

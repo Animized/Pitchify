@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $productName = "Pitchify"
-$productVersion = "1.2.3"
+$productVersion = "1.2.4"
 $helperProcessName = "Pitchify.Helper"
 $sourceHelper = Join-Path $PSScriptRoot "helper"
 $extensionTemplate = Join-Path $PSScriptRoot "pitchify.template.js"
@@ -213,40 +213,86 @@ if (Test-Path -LiteralPath $releaseInfoPath) {
     }
 }
 
-Stop-PitchifyHelper
-Copy-HelperWithRetry
-
-$config = [ordered]@{
-    apiToken = $token
-    semitones = [Math]::Max(-12, [Math]::Min(12, $semitones))
-    outputDeviceId = $outputDeviceId
-    updateRepository = $updateRepository
+$previousHelperExecutable = $null
+try {
+    $previousRunCommand = [string](
+        Get-ItemProperty `
+            -Path $runKey `
+            -Name $productName `
+            -ErrorAction SilentlyContinue
+    ).$productName
+    if (-not [string]::IsNullOrWhiteSpace($previousRunCommand)) {
+        $candidate = $previousRunCommand.Trim().Trim('"')
+        if (Test-Path -LiteralPath $candidate) {
+            $previousHelperExecutable = $candidate
+        }
+    }
 }
-$configJson = $config | ConvertTo-Json
-[System.IO.File]::WriteAllText($configPath, $configJson)
-
-$spicetifyConfig = (& spicetify -c).Trim()
-if (-not $spicetifyConfig) {
-    throw "Spicetify did not return its configuration path."
+catch {
+    # A missing or malformed previous startup entry is not fatal.
 }
-$spicetifyRoot = Split-Path -Parent $spicetifyConfig
-$extensionsDirectory = Join-Path $spicetifyRoot "Extensions"
-$installedExtension = Join-Path $extensionsDirectory "pitchify.js"
-New-Item -ItemType Directory -Force -Path $extensionsDirectory | Out-Null
 
-$extension = [System.IO.File]::ReadAllText($extensionTemplate)
-$extension = $extension.Replace("__PITCHIFY_BASE_URL__", $apiUrl)
-$extension = $extension.Replace("__PITCHIFY_TOKEN__", $token)
-[System.IO.File]::WriteAllText($installedExtension, $extension)
+$restartHelperOnExit = $false
+try {
+    $restartHelperOnExit = $true
+    Stop-PitchifyHelper
+    Copy-HelperWithRetry
 
-New-Item -Path $runKey -Force | Out-Null
-$runCommand = '"' + $helperExecutable + '"'
-New-ItemProperty -Path $runKey -Name $productName -Value $runCommand -PropertyType String -Force | Out-Null
+    $config = [ordered]@{
+        apiToken = $token
+        semitones = [Math]::Max(-12, [Math]::Min(12, $semitones))
+        outputDeviceId = $outputDeviceId
+        updateRepository = $updateRepository
+    }
+    $configJson = $config | ConvertTo-Json
+    [System.IO.File]::WriteAllText($configPath, $configJson)
 
-& spicetify config extensions "pitchify.js"
-Apply-Spicetify
+    $spicetifyConfig = (& spicetify -c).Trim()
+    if (-not $spicetifyConfig) {
+        throw "Spicetify did not return its configuration path."
+    }
+    $spicetifyRoot = Split-Path -Parent $spicetifyConfig
+    $extensionsDirectory = Join-Path $spicetifyRoot "Extensions"
+    $installedExtension = Join-Path $extensionsDirectory "pitchify.js"
+    New-Item -ItemType Directory -Force -Path $extensionsDirectory | Out-Null
 
-Start-Process -FilePath $helperExecutable -WorkingDirectory $helperDirectory -WindowStyle Hidden
+    $extension = [System.IO.File]::ReadAllText($extensionTemplate)
+    $extension = $extension.Replace("__PITCHIFY_BASE_URL__", $apiUrl)
+    $extension = $extension.Replace("__PITCHIFY_TOKEN__", $token)
+    [System.IO.File]::WriteAllText($installedExtension, $extension)
+
+    New-Item -Path $runKey -Force | Out-Null
+    $runCommand = '"' + $helperExecutable + '"'
+    New-ItemProperty -Path $runKey -Name $productName -Value $runCommand -PropertyType String -Force | Out-Null
+
+    & spicetify config extensions "pitchify.js"
+    if (-not $Silent) {
+        Apply-Spicetify
+    }
+}
+finally {
+    if ($restartHelperOnExit -and
+        -not (Get-Process -Name $helperProcessName -ErrorAction SilentlyContinue)) {
+        $restartExecutable = if (Test-Path -LiteralPath $helperExecutable) {
+            $helperExecutable
+        }
+        else {
+            $previousHelperExecutable
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($restartExecutable)) {
+            try {
+                Start-Process `
+                    -FilePath $restartExecutable `
+                    -WorkingDirectory (Split-Path -Parent $restartExecutable) `
+                    -WindowStyle Hidden
+            }
+            catch {
+                Write-Warning "Pitchify Helper could not be restarted automatically: $($_.Exception.Message)"
+            }
+        }
+    }
+}
 
 if (-not $Silent) {
     Write-Host ""
