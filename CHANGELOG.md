@@ -2,6 +2,20 @@
 
 All notable user-facing changes are documented here.
 
+## 1.2.3 - 2026-07-19
+
+### Fixed
+
+- Automatically rebuild the audio pipeline after Windows invalidates an output
+  device instead of requiring a manual output toggle.
+- Retry failed audio recovery with bounded backoff and retry immediately when
+  Windows reports another device change.
+
+### Changed
+
+- Increased the pitch shifter's anti-alias filter from 64 to 128 taps for
+  cleaner high-frequency audio during larger pitch shifts.
+
 ## 1.2.2 - 2026-07-19
 
 ### Fixed

@@ -13,7 +13,7 @@ public sealed class LivePitchWaveProvider : IWaveProvider
 {
     private const double PrimeBufferMilliseconds = 185;
     private const int InputBufferFrames = 2048;
-    private const int HighQualityAntiAliasFilterLength = 64;
+    private const int HighQualityAntiAliasFilterLength = 128;
 
     private readonly object _gate = new();
     private readonly ClockDriftResamplingSampleProvider _source;

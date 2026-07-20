@@ -10,12 +10,15 @@ public sealed class AudioEngine : IDisposable
     private const int OutputBufferMilliseconds = 60;
     private const int MaximumBufferedMilliseconds = 350;
     private const int DeviceChangeDebounceMilliseconds = 350;
+    private const int InitialRecoveryDelayMilliseconds = 750;
+    private const int MaximumRecoveryDelayMilliseconds = 15_000;
 
     private readonly object _gate = new();
     private readonly ConfigStore _configStore;
     private readonly DeviceService _deviceService;
     private readonly FileLogger _logger;
     private readonly Timer _deviceChangeTimer;
+    private readonly Timer _recoveryTimer;
 
     private WasapiCapture? _capture;
     private WasapiOut? _output;
@@ -27,6 +30,7 @@ public sealed class AudioEngine : IDisposable
     private string? _message = "Audio pipeline has not started.";
     private bool _disposed;
     private bool _restartInProgress;
+    private int _recoveryAttempt;
     private string? _observedDefaultOutputId;
     private IReadOnlyList<DeviceDto> _availableOutputs =
         Array.Empty<DeviceDto>();
@@ -41,6 +45,11 @@ public sealed class AudioEngine : IDisposable
         _logger = logger;
         _deviceChangeTimer = new Timer(
             _ => MonitorDevices(),
+            null,
+            Timeout.Infinite,
+            Timeout.Infinite);
+        _recoveryTimer = new Timer(
+            _ => RecoverPipeline(),
             null,
             Timeout.Infinite,
             Timeout.Infinite);
@@ -131,6 +140,7 @@ public sealed class AudioEngine : IDisposable
             }
 
             _restartInProgress = true;
+            _recoveryTimer.Change(Timeout.Infinite, Timeout.Infinite);
             try
             {
                 StopPipelineLocked();
@@ -139,9 +149,11 @@ public sealed class AudioEngine : IDisposable
             catch (Exception exception)
             {
                 _state = PipelineState.Error;
-                _message = $"The audio pipeline could not start: {exception.Message}";
+                _message =
+                    $"The audio pipeline could not start: {exception.Message} Reconnecting automatically.";
                 _logger.Error("Audio pipeline start failed.", exception);
                 StopPipelineLocked();
+                ScheduleRecoveryLocked();
             }
             finally
             {
@@ -216,6 +228,8 @@ public sealed class AudioEngine : IDisposable
 
         _state = PipelineState.Ready;
         _message = null;
+        _recoveryAttempt = 0;
+        _recoveryTimer.Change(Timeout.Infinite, Timeout.Infinite);
         _logger.Info(
             $"Audio pipeline started: '{_inputDevice.FriendlyName}' -> '{_outputDevice.FriendlyName}', pitch {config.Semitones:+#;-#;0} st.");
     }
@@ -261,9 +275,43 @@ public sealed class AudioEngine : IDisposable
             }
 
             _state = PipelineState.Error;
-            _message = $"{message} {exception.Message}";
+            _message =
+                $"{message} {exception.Message} Reconnecting automatically.";
             _logger.Error(message, exception);
+            ScheduleRecoveryLocked();
         }
+    }
+
+    private void RecoverPipeline()
+    {
+        lock (_gate)
+        {
+            if (_disposed
+                || _restartInProgress
+                || _state == PipelineState.Ready)
+            {
+                return;
+            }
+
+            _logger.Info("Attempting automatic audio pipeline recovery.");
+            Restart();
+        }
+    }
+
+    private void ScheduleRecoveryLocked()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        var exponent = Math.Min(_recoveryAttempt, 4);
+        var delay = Math.Min(
+            InitialRecoveryDelayMilliseconds * (1 << exponent),
+            MaximumRecoveryDelayMilliseconds);
+        _recoveryAttempt++;
+        _recoveryTimer.Change(delay, Timeout.Infinite);
+        _logger.Info($"Automatic audio recovery scheduled in {delay} ms.");
     }
 
     private void MonitorDevices()
@@ -280,6 +328,14 @@ public sealed class AudioEngine : IDisposable
             {
                 _availableOutputs = availableOutputs;
                 observedInputId = _inputDevice?.ID;
+
+                if (_state == PipelineState.Error)
+                {
+                    _logger.Info(
+                        "Audio devices changed while the pipeline was faulted; retrying now.");
+                    Restart();
+                    return;
+                }
             }
 
             if (currentInput?.ID != observedInputId)
@@ -389,6 +445,7 @@ public sealed class AudioEngine : IDisposable
             _disposed = true;
             _deviceService.DevicesChanged -= OnDevicesChanged;
             _deviceChangeTimer.Dispose();
+            _recoveryTimer.Dispose();
             StopPipelineLocked();
         }
     }

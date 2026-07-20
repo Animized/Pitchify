@@ -1,6 +1,6 @@
 {
   "name": "pitchify",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "private": true,
   "description": "A Spicetify semitone pitch shifter backed by a local Windows audio helper.",
   "scripts": {
