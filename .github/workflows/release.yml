@@ -38,7 +38,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $ErrorActionPreference = "Stop"
+          # GitHub CLI uses nonzero exit codes for expected retry conditions,
+          # such as a release that has not been created yet.
+          $ErrorActionPreference = "Continue"
           $tag = $env:GITHUB_REF_NAME
           $asset = ".\release\Pitchify-win-x64.zip"
           $maximumAttempts = 5

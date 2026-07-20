@@ -2,6 +2,13 @@
 
 All notable user-facing changes are documented here.
 
+## 1.2.6 - 2026-07-19
+
+### Fixed
+
+- Allow the release workflow to handle expected GitHub CLI failures and
+  continue into its retry logic.
+
 ## 1.2.5 - 2026-07-19
 
 ### Fixed
